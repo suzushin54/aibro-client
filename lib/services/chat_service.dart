@@ -19,7 +19,15 @@ class ChatService {
   }
 
   Stream<ChatStreamResponse> chatStream(Stream<ChatStreamRequest> requests) {
-    return stub.chatStream(requests);
+    try {
+      print("Connecting to server...");
+      final responseStream = stub.chatStream(requests);
+      print("Connected to server");
+      return responseStream;
+    } catch (e) {
+      print("Failed to connect to server: $e");
+      rethrow;
+    }
   }
 
   Future<void> shutdown() async {

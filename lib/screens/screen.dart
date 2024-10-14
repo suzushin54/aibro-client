@@ -5,6 +5,8 @@ import 'package:aibro_client/models/message.dart';
 import 'package:aibro_client/proto_aibro_v1/aibro.pb.dart';
 
 class Screen extends StatefulWidget {
+  const Screen({super.key});
+
   @override
   _ScreenState createState() => _ScreenState();
 }
@@ -17,6 +19,8 @@ class _ScreenState extends State<Screen> {
 
   @override
   void initState() {
+    print("Initializing chat screen");
+
     super.initState();
     _chatService = ChatService();
     _requestStreamController = StreamController<ChatStreamRequest>();
@@ -34,11 +38,20 @@ class _ScreenState extends State<Screen> {
 
   void _sendMessage() {
     if (_controller.text.isNotEmpty) {
-      final requets = ChatStreamRequest()
+      final request = ChatStreamRequest()
         ..userId = 'user1'
         ..message = _controller.text;
 
-      _requestStreamController.add(requets);
+      // for debugging
+      print("Sending message: ${request.message}");
+
+      try {
+        _requestStreamController.add(request);
+        print("Message sent to requestStreamController");
+      } catch (e) {
+        print("Error sending message: $e");
+      }
+
       setState(() {
         messages.add(Message(
           userId: 'user1',
