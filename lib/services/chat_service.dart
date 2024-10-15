@@ -5,6 +5,7 @@ import 'dart:async';
 class ChatService {
   late AIBroServiceClient stub;
   late ClientChannel channel;
+  late StreamController<ChatStreamRequest> _requestStreamController;
 
   ChatService() {
     channel = ClientChannel(
@@ -16,12 +17,13 @@ class ChatService {
     );
 
     stub = AIBroServiceClient(channel);
+    _requestStreamController = StreamController<ChatStreamRequest>();
   }
 
-  Stream<ChatStreamResponse> chatStream(Stream<ChatStreamRequest> requests) {
+  Stream<ChatStreamResponse> chatStream() {
     try {
       print("Connecting to server...");
-      final responseStream = stub.chatStream(requests);
+      final responseStream = stub.chatStream(_requestStreamController.stream);
       print("Connected to server");
       return responseStream;
     } catch (e) {
@@ -30,8 +32,18 @@ class ChatService {
     }
   }
 
-  Future<void> shutdown() async {
-    await channel.shutdown();
+  void sendMessage(String userId, String message) {
+    final request = ChatStreamRequest()
+        ..userId = userId
+        ..message = message;
+
+    print("Sending message: $message");
+
+    _requestStreamController.add(request);
   }
 
+  Future<void> shutdown() async {
+    await _requestStreamController.close();
+    await channel.shutdown();
+  }
 }
