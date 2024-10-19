@@ -1,6 +1,16 @@
 import 'package:grpc/grpc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aibro_client/proto_aibro_v1/aibro.pbgrpc.dart';
 import 'dart:async';
+
+final chatServiceProvider = Provider<ChatService>((ref) {
+  return ChatService();
+});
+
+final chatStreamProvider = StreamProvider.autoDispose<ChatStreamResponse>((ref) {
+  final chatService = ref.watch(chatServiceProvider);
+  return chatService.chatStream();
+});
 
 class ChatService {
   late AIBroServiceClient stub;
@@ -23,9 +33,7 @@ class ChatService {
   Stream<ChatStreamResponse> chatStream() {
     try {
       print("Connecting to server...");
-      final responseStream = stub.chatStream(_requestStreamController.stream);
-      print("Connected to server");
-      return responseStream;
+      return stub.chatStream(_requestStreamController.stream);
     } catch (e) {
       print("Failed to connect to server: $e");
       rethrow;
