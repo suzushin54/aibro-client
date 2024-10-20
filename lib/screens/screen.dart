@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aibro_client/services/chat_service.dart';
 import 'package:aibro_client/models/message.dart';
+import 'package:aibro_client/widgets/message_bubble.dart';
 
 class Screen extends StatefulWidget {
   const Screen({super.key});
@@ -66,15 +67,11 @@ class _ScreenState extends State<Screen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final message = messages[index];
-                return ListTile(
-                  title: Text(
-                    message.message,
-                    style: TextStyle(
-                      color: message.userId == 'user1'
-                          ? Colors.indigo
-                          : Colors.black,
-                    ),
-                  ),
+                bool isMe = message.userId == 'user1';
+
+                return MessageBubble(
+                    message: message.message,
+                    isMe: isMe,
                 );
               },
             ),
