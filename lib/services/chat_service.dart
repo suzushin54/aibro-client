@@ -9,7 +9,7 @@ final chatServiceProvider = Provider<ChatService>((ref) {
 
 final chatStreamProvider = StreamProvider.autoDispose<ChatStreamResponse>((ref) {
   final chatService = ref.watch(chatServiceProvider);
-  return chatService.chatStream();
+  return chatService.chatStream().asBroadcastStream();
 });
 
 class ChatService {
@@ -23,6 +23,7 @@ class ChatService {
       port: 8080,
       options: const ChannelOptions(
         credentials: ChannelCredentials.insecure(),
+        idleTimeout: Duration(minutes: 1),
       ),
     );
 
@@ -33,7 +34,21 @@ class ChatService {
   Stream<ChatStreamResponse> chatStream() {
     try {
       print("Connecting to server...");
-      return stub.chatStream(_requestStreamController.stream);
+      final responseStream = stub.chatStream(_requestStreamController.stream).asBroadcastStream();
+
+      responseStream.listen(
+        (response) {
+          print("Received response: ${response.message}");
+        },
+        onError: (error) {
+          print("Error in stream: $error");
+        },
+        onDone: () {
+          print("Stream has been closed.");
+        },
+      );
+
+      return responseStream;
     } catch (e) {
       print("Failed to connect to server: $e");
       rethrow;
@@ -41,6 +56,11 @@ class ChatService {
   }
 
   void sendMessage(String userId, String message) {
+    if (_requestStreamController.isClosed) {
+      print("Cannot send message, stream is closed.");
+      return;
+    }
+
     final request = ChatStreamRequest()
         ..userId = userId
         ..message = message;
